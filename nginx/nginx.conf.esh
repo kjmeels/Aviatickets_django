@@ -1,0 +1,36 @@
+resolver 127.0.0.11 valid=5s ipv6=off;
+
+proxy_cache_path /var/lib/nginx/proxy_cache levels=1:2 keys_zone=CACHE:15m max_size=5G inactive=30d;
+
+map $server_port $x_forwarded_host {
+    default $host:$server_port;
+    80      $host;
+    443     $host;
+}
+
+server {
+    server_name <%= $SITE_HOST %>;
+    listen 80;
+    sendfile on;
+    tcp_nopush on;
+    gzip on;
+    client_max_body_size 5M;
+
+    location /s/ {
+        include backend;
+        expires 365d;
+    }
+
+    location /api/ {
+        include backend;
+    }
+
+    location /admin/ {
+        client_max_body_size 50M;
+        include backend;
+    }
+
+    location / {
+        root /var/www/local_static/;
+    }
+}
